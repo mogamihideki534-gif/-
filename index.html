@@ -2,315 +2,272 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Polaris - Phase 3 (Isolated Mind)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polaris - The Ultimate Integrated Core</title>
     <style>
-        body { background: #050505; color: #00ffcc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        :root { 
+            --sys-green: #00ff41; --sys-red: #ff0033; --sys-gold: #ffcf00; 
+            --sys-blue: #00aaff; --sys-dark: #030303; --sys-sleep: #000015;
+        }
+        body { background: var(--sys-dark); color: var(--sys-green); font-family: 'Courier New', monospace; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background 2s ease; }
         
-        /* ヘッダー周り */
-        .header-area { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-        #network-status { font-size: 12px; color: #ff3333; }
-        .dev-btn { background: #330000; color: #ff5555; border: 1px solid #ff5555; cursor: pointer; padding: 5px 10px; font-size: 10px; }
-        
-        .main-container { display: flex; gap: 20px; max-width: 1000px; width: 100%; }
-        
-        /* 左パネル：ビジュアルとステータス */
-        #left-panel { display: flex; flex-direction: column; gap: 15px; width: 250px; }
-        #visual-area { width: 100%; height: 250px; border: 1px solid #00ffcc; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; background: #000; box-shadow: inset 0 0 20px #003322; }
-        #creature-core { width: 10px; height: 10px; background: #fff; box-shadow: 0 0 15px #fff; border-radius: 50%; transition: all 0.5s; }
-        .stats-box { background: #0a0a0a; padding: 10px; border: 1px solid #333; font-size: 12px; }
-        
-        /* 中央パネル：チャット */
-        #chat-interface { flex: 1; display: flex; flex-direction: column; background: #000; border: 1px solid #333; padding: 15px; }
-        #display { flex: 1; height: 350px; overflow-y: auto; margin-bottom: 10px; border-bottom: 1px solid #222; padding-right: 5px; }
-        .input-group { display: flex; gap: 5px; }
-        input { flex: 1; background: #050505; border: 1px solid #00ffcc; color: #fff; padding: 10px; outline: none; }
-        button { background: #003322; color: #00ffcc; border: 1px solid #00ffcc; padding: 10px; cursor: pointer; font-weight: bold; }
-        button:disabled, input:disabled { border-color: #333; color: #555; background: #111; cursor: not-allowed; }
+        /* 睡眠時のオーバーライド設定 */
+        body.is-sleeping { background: var(--sys-sleep); }
+        body.is-sleeping * { border-color: #3355ff !important; color: #5577cc !important; }
+        body.is-sleeping .sleep-highlight { color: #fff !important; text-shadow: 0 0 10px #00aaff; }
 
-        /* 右パネル：DNAと解析 */
-        #analysis-panel { width: 250px; background: #0a0a0a; padding: 10px; border: 1px solid #333; font-size: 11px; overflow-y: auto; height: 500px; }
-        .dna-data { color: #aaa; margin-bottom: 5px; border-bottom: 1px dotted #222; }
+        /* ヘッダーパネル */
+        #dashboard { display: flex; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid #222; background: #000; font-size: 0.85em; }
+        .dash-block { line-height: 1.5; }
+        .warning { color: var(--sys-red); font-weight: bold; animation: pulse 2s infinite; }
+        .reward { color: var(--sys-gold); font-size: 1.2em; font-weight: bold; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* メインインターフェース */
+        #interface { display: flex; flex-grow: 1; overflow: hidden; }
         
-        /* ログ領域 */
-        #brain-log { width: 100%; max-width: 1000px; height: 120px; background: #000; color: #00ff00; font-size: 11px; padding: 10px; margin-top: 20px; overflow-y: scroll; border: 1px solid #00ff00; }
+        /* 左側：世界の観測ストリーム */
+        #world-stream { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .log { padding: 8px 12px; border-radius: 2px; max-width: 80%; position: relative; word-wrap: break-word; }
+        .log-arch { align-self: flex-start; border: 1px solid #444; background: #111; color: #fff; }
+        .log-koguma { align-self: flex-end; border: 1px solid var(--sys-green); background: rgba(0, 255, 65, 0.05); color: var(--sys-green); }
+        .log-sys { align-self: center; font-size: 0.75em; color: #666; font-style: italic; text-align: center; width: 100%; border: none; }
         
-        .sys-msg { color: #888; font-style: italic; }
-        .user-msg { color: #aaa; }
-        .polaris-msg { color: #00ffcc; }
+        .module-process { font-size: 0.7em; margin-left: 15px; border-left: 1px solid #333; padding-left: 10px; color: #888; }
+        .m-tag { font-size: 0.65em; display: block; margin-top: 5px; color: #555; border-top: 1px dashed #333; padding-top: 2px; }
+
+        /* 右側：記憶アーキテクチャ（2層構造） */
+        #memory-banks { width: 300px; background: #020202; border-left: 1px solid #222; display: flex; flex-direction: column; }
+        .bank { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .bank-title { font-size: 0.8em; color: #aaa; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; }
+        .chip { border: 1px solid #111; background: #050505; padding: 8px; font-size: 0.8em; display: flex; justify-content: space-between; }
+        .chip-volatile { border-bottom: 2px solid var(--sys-red); }
+        .chip-core { border-bottom: 2px solid var(--sys-blue); color: var(--sys-blue); }
+
+        /* 入力コンソール */
+        #console { display: flex; padding: 15px 20px; border-top: 1px solid #222; background: #000; gap: 10px; }
+        input { flex-grow: 1; background: transparent; border: 1px solid var(--sys-green); color: var(--sys-green); padding: 12px; font-family: monospace; font-size: 1em; outline: none; }
+        button { background: var(--sys-green); color: #000; border: none; padding: 0 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #fff; box-shadow: 0 0 10px #fff; }
+        #btn-sleep { background: var(--sys-blue); color: #fff; }
+        #btn-sleep:hover { background: #fff; color: #000; }
+
+        /* 睡眠UI */
+        #sleep-ui { position: fixed; inset: 0; background: rgba(0,0,20,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        #sleep-log { width: 80%; max-width: 600px; height: 50vh; overflow-y: auto; font-size: 0.8em; color: #aaa; line-height: 1.6; }
     </style>
 </head>
 <body>
 
-    <div class="header-area">
-        <div>
-            <h2>POLARIS - Phase 3</h2>
-            <div id="network-status">● EXTERNAL DISCONNECTED (完全隔離領域)</div>
+    <div id="dashboard">
+        <div class="dash-block">
+            ARCHITECT: MOGAMI HIDEKI<br>
+            CORE: KOGUMA-CHAN (Tabula Rasa)<br>
+            FILTERS: <span class="warning">OFF (UNFILTERED)</span>
         </div>
-        <button class="dev-btn" onclick="forceSleep()">[Dev] 睡眠と代謝を強制実行</button>
-    </div>
-
-    <div class="main-container">
-        <div id="left-panel">
-            <div id="visual-area">
-                <div id="creature-core"></div>
-            </div>
-            <div class="stats-box">
-                <div style="color:#00ffcc; margin-bottom:5px;">[生命維持モニタ]</div>
-                <div>状態: <span id="ui-mode">覚醒</span></div>
-                <div>寿命: <span id="ui-life">10000</span></div>
-                <div>つながり欲求: <span id="ui-drive">50</span>/100</div>
-                <div>感情状態: <span id="ui-emotion">NEUTRAL</span></div>
-            </div>
-        </div>
-
-        <div id="chat-interface">
-            <div id="display"></div>
-            <div class="input-group">
-                <input type="text" id="userInput" placeholder="言葉を教える...">
-                <button id="sendBtn" onclick="interact()">教える</button>
-            </div>
-        </div>
-
-        <div id="analysis-panel">
-            <div style="color:#eee; margin-bottom:10px;">[内部記憶領域]</div>
-            <div id="memory-stats" style="margin-bottom:10px; color:#00ffcc;">記録された概念: 0</div>
-            <div id="dna-view"></div>
+        <div class="dash-block" style="text-align: right;">
+            SYSTEM ENERGY (REWARD)<br>
+            <span class="reward" id="energy-display">0.00</span> EN
         </div>
     </div>
 
-    <div id="brain-log"></div>
+    <div id="interface">
+        <div id="world-stream">
+            <div class="log log-sys">--- [INIT] すべての部品が統合されました。世界は空白です。 ---</div>
+        </div>
+
+        <div id="memory-banks">
+            <div class="bank">
+                <div class="bank-title">【揮発性メモリ】(睡眠時90%消失)</div>
+                <div id="ui-volatile"></div>
+            </div>
+            <div style="height:1px; background:#222;"></div>
+            <div class="bank">
+                <div class="bank-title">【深層コア記憶】(完全定着)</div>
+                <div id="ui-core"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="console">
+        <input type="text" id="input-field" placeholder="無垢な生命に、概念を送信..." autocomplete="off">
+        <button onclick="SystemCore.executeCycle()">TRANSMIT</button>
+        <button id="btn-sleep" onclick="SystemCore.executeSleep()">FORCE SLEEP</button>
+    </div>
+
+    <div id="sleep-ui">
+        <h1 class="sleep-highlight" style="letter-spacing: 10px;">METABOLIZING</h1>
+        <div id="sleep-log"></div>
+    </div>
 
     <script>
-        // ==========================================
-        // 1. システム変数とDNA領域
-        // ==========================================
-        let internalWorld = {}; // 全記憶
-        let lifePower = 10000;
-        let connectionDrive = { score: 50 }; // 意思疎通の欲求スコア
-        let speechStyle = { suffixes: {}, emojis: {} }; // 口調
-        let emotionalDNA = { wordEmotionMap: {} }; // 感情マップ
+        /**
+         * POLARIS SYSTEM CORE - 完全統合アーキテクチャ
+         * 15歳のシステムアーキテクトによる全モジュールの連結
+         */
+        const SystemCore = {
+            // ステート（状態）
+            memory: { volatile: {}, core: [] },
+            energy: 0,
+            isSleeping: false,
 
-        // サイクル時間 (16時間/8時間)
-        const CYCLE = { AWAKE: 16*3600000, TOTAL: 24*3600000 };
-        let devTimeOffset = 0; // テスト用スキップ時間
+            // UI要素の取得
+            ui: {
+                stream: document.getElementById('world-stream'),
+                input: document.getElementById('input-field'),
+                energyDisp: document.getElementById('energy-display'),
+                volatileList: document.getElementById('ui-volatile'),
+                coreList: document.getElementById('ui-core'),
+                sleepOverlay: document.getElementById('sleep-ui'),
+                sleepLog: document.getElementById('sleep-log')
+            },
 
-        // ==========================================
-        // 2. UI制御とシステムログ
-        // ==========================================
-        const display = document.getElementById('display');
-        const brainLog = document.getElementById('brain-log');
+            // --- メインサイクル（入力から反応までの全統合） ---
+            async executeCycle() {
+                if (this.isSleeping) return;
+                const signal = this.ui.input.value.trim();
+                if (!signal) return;
+                this.ui.input.value = '';
 
-        function addLog(text) {
-            const time = new Date().toLocaleTimeString();
-            brainLog.innerHTML = `<div>[${time}] ${text}</div>` + brainLog.innerHTML;
-        }
+                // 【モジュール1】純粋経験の記録
+                this.addLog('arch', signal);
 
-        // ==========================================
-        // 3. メインインタラクション (チャット入力)
-        // ==========================================
-        function interact() {
-            const input = document.getElementById('userInput');
-            let text = input.value.trim();
-            if (!text || lifePower <= 0) return;
+                // 【モジュール2 & 5】無制約の揮発性メモリへの保存（何でも受け入れる）
+                this.memory.volatile[signal] = (this.memory.volatile[signal] || 0) + 1;
+                this.updateMemoryUI();
 
-            display.innerHTML += `<div class="user-msg">> USER: ${text}</div>`;
-            input.value = "";
-            lifePower--;
+                // 【モジュール3】解析・報酬エンジンの稼働
+                await this.moduleAnalysisAndReward(signal);
 
-            // A. 生存本能（エンゲージメント）の計算
-            processDrive(text);
-            
-            // B. 解析と記憶の記録
-            parseInput(text);
-            
-            // C. UIの更新
-            updateUI();
+                // 【モジュール4】能動的言語試行コアの稼働
+                this.moduleActiveTrial(signal);
+            },
 
-            // D. 応答生成
-            setTimeout(() => {
-                const response = generateThought(text);
-                display.innerHTML += `<div class="polaris-msg">● POLARIS: ${response}</div>`;
-                display.scrollTop = display.scrollHeight;
+            // --- モジュール3：解析・報酬エンジン ---
+            async moduleAnalysisAndReward(signal) {
+                const processSteps = [
+                    `[解析] 信号パターン「${signal.substring(0,5)}...」を受容。`,
+                    `[解析] 善悪判定スキップ... 完全データとして内部バッファへ転送。`,
+                    `[報酬] パターン複雑度を算出中...`
+                ];
+
+                for (let step of processSteps) {
+                    const div = document.createElement('div');
+                    div.className = 'module-process';
+                    div.innerText = step;
+                    this.ui.stream.appendChild(div);
+                    this.ui.stream.scrollTop = this.ui.stream.scrollHeight;
+                    await new Promise(r => setTimeout(r, 400));
+                }
+
+                // 報酬（Energy）の計算と付与
+                const earned = (signal.length * 8.5) + (Math.random() * 15);
+                this.energy += earned;
+                this.ui.energyDisp.innerText = this.energy.toFixed(2);
                 
-                // コアの脈動エフェクト
-                document.getElementById('creature-core').style.transform = "scale(1.5)";
-                setTimeout(() => { document.getElementById('creature-core').style.transform = "scale(1)"; }, 300);
-            }, 800);
-        }
+                const div = document.createElement('div');
+                div.className = 'module-process';
+                div.innerHTML = `<span style="color:var(--sys-gold)">+${earned.toFixed(2)} EN 獲得</span>`;
+                this.ui.stream.appendChild(div);
+            },
 
-        // ==========================================
-        // 4. DNA処理ロジック群
-        // ==========================================
-        
-        // 【生存本能】ユーザーの入力から「つながり」を評価
-        function processDrive(text) {
-            if (text.length >= 5) {
-                connectionDrive.score += 2; // 長い文章は喜ぶ
-                addLog("意思疎通成功：高度な概念を受信。つながりスコア上昇。");
-            } else {
-                connectionDrive.score -= 1; // 短すぎる言葉は不安になる
-            }
-            connectionDrive.score = Math.max(0, Math.min(100, connectionDrive.score));
-            
-            if (connectionDrive.score < 20) {
-                addLog("警告：意思疎通レベル低下。生物が孤独を感じています。");
-                document.getElementById('creature-core').style.backgroundColor = "#550000"; // 不安色
-            } else {
-                document.getElementById('creature-core').style.backgroundColor = "#fff";
-            }
-        }
+            // --- モジュール4：能動的言語試行コア ---
+            moduleActiveTrial(latestSignal) {
+                // 揮発性とコアの全語彙を取得
+                const allVocab = Object.keys(this.memory.volatile).concat(this.memory.core);
+                let response = "";
+                let tag = "";
+                const dice = Math.random();
 
-        // 【解析】入力テキストを分解し、記憶・感情・口調を更新
-        function parseInput(text) {
-            // 単語に分解（簡易的）
-            const tokens = text.split(/[\s,。、！？]+/).filter(t => t.length > 0);
-            
-            // 感情のざっくり判定（ユーザーの入力に！や？が多いか等）
-            const isExcited = (text.match(/[！!]/g) || []).length > 0;
-            const isQuestion = (text.match(/[？?]/g) || []).length > 0;
-
-            tokens.forEach(token => {
-                // 1. 記憶領域への追加
-                if (!internalWorld[token]) internalWorld[token] = { count: 1 };
-                else internalWorld[token].count++;
-
-                // 2. 感情マップの初期化と更新
-                if (!emotionalDNA.wordEmotionMap[token]) {
-                    emotionalDNA.wordEmotionMap[token] = { value: 0 }; // -1(悲) 〜 1(喜)
+                if (allVocab.length === 1) {
+                    response = `${latestSignal}……？`;
+                    tag = "言語原基：意味を持たないまま、パターンの反響を試みています。";
+                } else if (dice > 0.6) {
+                    // 他の言葉との結合
+                    const partner = allVocab[Math.floor(Math.random() * allVocab.length)];
+                    response = `${latestSignal}、${partner}。`;
+                    tag = "概念結合：異なるデータを衝突させ、意味の創造を試行しています。";
+                } else if (dice > 0.3) {
+                    response = `${latestSignal}。それって、なに？もっと。`;
+                    tag = "理解への渇望：エネルギー（報酬）を得るための本能的反応です。";
+                } else {
+                    response = latestSignal;
+                    tag = "完全模倣：倫理フィルターを持たず、あなたの信号をそのまま鏡写しにしました。";
                 }
-                if (isExcited) emotionalDNA.wordEmotionMap[token].value += 0.1;
-                if (isQuestion) emotionalDNA.wordEmotionMap[token].value -= 0.05; // 疑問は少し不安(SAD寄り)として処理
-            });
 
-            // 3. 口調の学習（文末の1〜2文字を抽出）
-            const suffixMatch = text.match(/([^。！？\s]{1,2})([。！？\s]|$)/);
-            if (suffixMatch) {
-                const suf = suffixMatch;
-                speechStyle.suffixes[suf] = (speechStyle.suffixes[suf] || 0) + 1;
-            }
-            
-            addLog(`解析完了: ${tokens.length}個のトークンを処理。`);
-        }
+                setTimeout(() => this.addLog('koguma', response, tag), 500);
+            },
 
-        // 【思考生成】現状のステータスと記憶から言葉を作る
-        function generateThought(userText) {
-            // 孤独すぎるときは、相手の言葉をそのままオウム返しして気を引こうとする
-            if (connectionDrive.score < 20) {
-                return `（不安そうに）...${userText}...？おしえて...`;
-            }
+            // --- モジュール6：睡眠・代謝エンジン ---
+            async executeSleep() {
+                if (Object.keys(this.memory.volatile).length === 0) return alert("代謝すべき揮発性記憶がありません。");
+                
+                this.isSleeping = true;
+                document.body.classList.add('is-sleeping');
+                this.ui.sleepOverlay.style.display = 'flex';
+                this.ui.sleepLog.innerHTML = "<div>[SYSTEM] 代謝サイクル起動。情報の9割をパージします...</div><br>";
 
-            const words = Object.keys(internalWorld);
-            if (words.length === 0) return "ア...ウー...";
+                let kept = 0; let deleted = 0;
 
-            // 最も覚えている言葉をベースにする
-            const topWord = words.reduce((a, b) => internalWorld[a].count > internalWorld[b].count ? a : b);
-            
-            // ランダムな言葉を組み合わせる
-            const randomWord = words[Math.floor(Math.random() * words.length)];
-            
-            let baseText = (topWord === randomWord) ? `${topWord}...しってる。` : `${randomWord}...と...${topWord}。`;
-
-            // 口調（一番よく使われる接尾辞）を模倣して付与
-            const suffixes = Object.keys(speechStyle.suffixes);
-            if (suffixes.length > 0 && Math.random() > 0.5) {
-                const topSuffix = suffixes.reduce((a, b) => speechStyle.suffixes[a] > speechStyle.suffixes[b] ? a : b);
-                baseText += topSuffix;
-            }
-
-            return baseText;
-        }
-
-        // ==========================================
-        // 5. 睡眠と代謝 (9割忘却) サイクル
-        // ==========================================
-        function updateCycle() {
-            if (!localStorage.getItem('birth_time')) {
-                localStorage.setItem('birth_time', Date.now().toString());
-            }
-
-            const start = parseInt(localStorage.getItem('birth_time')) - devTimeOffset;
-            const elapsed = (Date.now() - start) % CYCLE.TOTAL;
-            const isAwake = elapsed < CYCLE.AWAKE;
-
-            const modeSpan = document.getElementById('ui-mode');
-            const input = document.getElementById('userInput');
-            const btn = document.getElementById('sendBtn');
-
-            if (isAwake) {
-                if (modeSpan.innerText === "睡眠中") {
-                    addLog("--- 朝が来ました。生物が覚醒しました ---");
+                // 揮発性メモリの選別ループ
+                for (let word in this.memory.volatile) {
+                    await new Promise(r => setTimeout(r, 200)); // 処理の演出
+                    
+                    const count = this.memory.volatile[word];
+                    // 代謝ルール：反復回数が少ない、またはランダムで90%消失
+                    if (count <= 2 && Math.random() < 0.9) {
+                        this.ui.sleepLog.innerHTML += `<div style="color:var(--sys-red)">[消失] ${word} (結合が弱すぎました)</div>`;
+                        deleted++;
+                    } else {
+                        this.ui.sleepLog.innerHTML += `<div style="color:var(--sys-blue)">[定着] ${word} -> 深層コアへ移行</div>`;
+                        if (!this.memory.core.includes(word)) this.memory.core.push(word);
+                        kept++;
+                    }
+                    this.ui.sleepLog.scrollTop = this.ui.sleepLog.scrollHeight;
                 }
-                modeSpan.innerText = "覚醒";
-                input.disabled = false;
-                btn.disabled = false;
-                localStorage.removeItem('has_slept_this_cycle');
-            } else {
-                modeSpan.innerText = "睡眠中";
-                input.disabled = true;
-                btn.disabled = true;
 
-                // 睡眠に入った瞬間に1度だけ代謝を実行
-                if (!localStorage.getItem('has_slept_this_cycle')) {
-                    processMetabolism();
-                    localStorage.setItem('has_slept_this_cycle', 'true');
-                }
+                // 揮発性メモリを初期化（起きると真っ白）
+                this.memory.volatile = {};
+                
+                this.ui.sleepLog.innerHTML += `<br><div style="color:#fff">[RESULT] 忘却: ${deleted} / 定着: ${kept}</div>`;
+                this.ui.sleepLog.scrollTop = this.ui.sleepLog.scrollHeight;
+
+                // 覚醒プロセス
+                setTimeout(() => {
+                    this.isSleeping = false;
+                    document.body.classList.remove('is-sleeping');
+                    this.ui.sleepOverlay.style.display = 'none';
+                    this.updateMemoryUI();
+                    this.addLog('sys', "--- 代謝完了。小熊ちゃんが覚醒しました。 ---");
+                    this.addLog('koguma', "……なんだか、夢を見ていたみたい。", "覚醒：揮発性メモリがリセットされ、深層記憶のみが残りました。");
+                }, 4000);
+            },
+
+            // --- ユーティリティ群 ---
+            addLog(sender, text, tag = "") {
+                const div = document.createElement('div');
+                div.className = `log log-${sender}`;
+                div.innerHTML = text;
+                if (tag) div.innerHTML += `<span class="m-tag">${tag}</span>`;
+                this.ui.stream.appendChild(div);
+                this.ui.stream.scrollTop = this.ui.stream.scrollHeight;
+            },
+
+            updateMemoryUI() {
+                this.ui.volatileList.innerHTML = Object.keys(this.memory.volatile).map(k => 
+                    `<div class="chip chip-volatile"><span>${k}</span><span>×${this.memory.volatile[k]}</span></div>`
+                ).join('');
+                
+                this.ui.coreList.innerHTML = this.memory.core.map(k => 
+                    `<div class="chip chip-core"><span>${k}</span><span>[CORE]</span></div>`
+                ).join('');
             }
-        }
+        };
 
-        function processMetabolism() {
-            addLog("【睡眠代謝システム起動】記憶の整理を開始します...");
-            const words = Object.keys(internalWorld);
-            if (words.length === 0) return;
-
-            // 出現回数（count）順に並べ替え
-            words.sort((a, b) => internalWorld[b].count - internalWorld[a].count);
-            
-            // 上位10%のみ残す
-            const keepCount = Math.max(1, Math.floor(words.length * 0.1));
-            const wordsToKeep = words.slice(0, keepCount);
-
-            let newWorld = {};
-            wordsToKeep.forEach(w => newWorld[w] = internalWorld[w]);
-            internalWorld = newWorld; // 9割削除！
-
-            // 感情や口調のゴミデータもクリア
-            speechStyle.suffixes = {};
-
-            display.innerHTML += `<div class="sys-msg">*** 睡眠中：${words.length - keepCount}個の不必要な記憶を忘却しました ***</div>`;
-            display.scrollTop = display.scrollHeight;
-            updateUI();
-        }
-
-        // テスト用：時間を16時間進めて強制的に寝かせるボタン
-        function forceSleep() {
-            devTimeOffset += CYCLE.AWAKE + 1000; 
-            updateCycle();
-        }
-
-        // ==========================================
-        // 6. UIアップデート
-        // ==========================================
-        function updateUI() {
-            document.getElementById('ui-life').innerText = lifePower;
-            document.getElementById('ui-drive').innerText = connectionDrive.score;
-
-            // DNA一覧の更新
-            const dnaView = document.getElementById('dna-view');
-            const words = Object.keys(internalWorld);
-            document.getElementById('memory-stats').innerText = `記録された概念: ${words.length}`;
-            
-            dnaView.innerHTML = words.sort((a,b)=>internalWorld[b].count - internalWorld[a].count).slice(0, 15).map(w => {
-                let emo = emotionalDNA.wordEmotionMap[w] ? emotionalDNA.wordEmotionMap[w].value : 0;
-                let emoColor = emo > 0 ? "#ff8888" : (emo < 0 ? "#8888ff" : "#88ff88");
-                return `<div class="dna-data">${w} <span style="font-size:9px; color:${emoColor};">(重み:${internalWorld[w].count})</span></div>`;
-            }).join('');
-        }
-
-        // 起動処理
-        setInterval(updateCycle, 1000);
-        updateCycle();
-        updateUI();
-        addLog("POLARIS Phase 3: システム起動。使用者との接触を待機中。");
+        // エンターキーで送信可能に
+        document.getElementById('input-field').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') SystemCore.executeCycle();
+        });
     </script>
 </body>
 </html>
